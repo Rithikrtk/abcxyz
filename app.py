@@ -120,7 +120,7 @@ limiter = Limiter(
 )
 
 limiter.init_app(app)
-)
+
 
 # ── CORS settings — restrict origins to production only.
 CORS(
