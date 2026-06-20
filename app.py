@@ -115,9 +115,11 @@ if REDIS_URL:
         redis_client = None
 
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
     storage_uri=REDIS_URL or 'memory://',
+)
+
+limiter.init_app(app)
 )
 
 # ── CORS settings — restrict origins to production only.
