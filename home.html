@@ -1,0 +1,508 @@
+{% extends 'layouts/base_public.html' %}
+
+{% block body_class %}page-home{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="home-wrap">
+
+    <!-- ① TICKER -->
+    <div class="ticker-wrapper">
+        <div class="ticker-label">LIVE</div>
+        <div class="ticker-track" id="tickerTrack">
+            {% for coin in top_picks %}
+            <div class="ticker-item">
+                <img src="{{ coin.image }}" width="14" height="14" alt="{{ coin.symbol }}">
+                <span class="ticker-name">{{ coin.symbol | upper }}</span>
+                <span class="ticker-price">₹{{ coin.formatted_price }}</span>
+                <span class="ticker-change {% if coin.price_change_percentage_24h >= 0 %}tick-up{% else %}tick-down{% endif %}">
+                    {% if coin.price_change_percentage_24h >= 0 %}▲{% else %}▼{% endif %}
+                    {{ coin.price_change_percentage_24h | round(2) | abs }}%
+                </span>
+            </div>
+            {% endfor %}
+            {% for coin in top_gainers %}
+            <div class="ticker-item">
+                <img src="{{ coin.image }}" width="14" height="14" alt="{{ coin.symbol }}">
+                <span class="ticker-name">{{ coin.symbol | upper }}</span>
+                <span class="ticker-price">₹{{ coin.formatted_price }}</span>
+                <span class="ticker-change tick-up">▲ {{ coin.price_change_percentage_24h | round(2) | abs }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ② HERO BAND — mood pill + market stats -->
+    <div class="hero-band" id="heroBand">
+        <div class="hero-mood" id="heroMood">
+            <div class="mood-dot" id="moodDot"></div>
+            <span id="moodText">Loading market...</span>
+        </div>
+        <div class="hero-band-div"></div>
+        <div class="hero-stats">
+            <div class="hstat marketcap-card" id="heroMktCapCard" role="button" tabindex="0" title="Click to view market cap breakdown">
+                <span class="hstat-label">Market Cap</span>
+                <span class="hstat-value" id="heroMktCap">—</span>
+                <span class="hstat-chg" id="heroMktCapChg"></span>
+            </div>
+            <div class="hstat">
+                <span class="hstat-label">24h Volume</span>
+                <span class="hstat-value" id="heroVolume">—</span>
+                <span class="hstat-chg" id="heroVolumeChg"></span>
+            </div>
+            <div class="hstat">
+                <span class="hstat-label">BTC Dom.</span>
+                <span class="hstat-value" id="heroBtcDom">—</span>
+                <span class="hstat-chg up" id="heroBtcDomChg"></span>
+            </div>
+            <div class="hstat">
+                <span class="hstat-label">ETH Dom.</span>
+                <span class="hstat-value" id="heroEthDom">—</span>
+                <span class="hstat-chg" id="heroEthDomChg"></span>
+            </div>
+            <div class="hstat">
+                <span class="hstat-label">Active Coins</span>
+                <span class="hstat-value" id="heroCoins">—</span>
+                <span class="hstat-chg up" id="heroCoinsChg"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ③ TRENDING STRIP -->
+    <div class="trending-strip">
+        <div class="trending-strip-label">📈 Market Movers</div>
+        <div class="trending-strip-div"></div>
+        <div class="trending-chips" id="trendingChips">
+            <!-- Populated by home.js -->
+            <div style="font-size:12px;color:#CBD5E1;padding:4px 0;">Loading...</div>
+        </div>
+    </div>
+
+    <!-- ③b WATCHLIST — logged-in users only -->
+    {% if session.get('user_id') %}
+    <div class="watchlist-section" id="watchlistSection">
+        <div class="section-head" style="padding:16px 0 10px;">
+            <span class="section-title">⭐ Your Watchlist</span>
+            <a href="{{ url_for('profile') }}?tab=watchlist" class="section-link">Manage →</a>
+        </div>
+        <div class="watchlist-row" id="watchlistRow">
+            {# Populated by home.js from localStorage saved_coins #}
+            <div class="watchlist-empty" id="watchlistEmpty" style="display:none;">
+                No coins saved yet —
+                <a href="{{ url_for('coins') }}">browse coins</a>
+                and click ⭐ to add.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ④ MOVERS -->
+    <div class="movers-section">
+        <div class="movers-header">
+            <div class="movers-tabs">
+                <button class="mover-tab active" data-tab="gainers">
+                    <span class="mover-tab-dot gain-dot"></span> Gainers
+                </button>
+                <button class="mover-tab" data-tab="losers">
+                    <span class="mover-tab-dot lose-dot"></span> Losers
+                </button>
+                <button class="mover-tab" data-tab="picks">
+                    <span class="mover-tab-dot pick-dot"></span> Opportunities
+                </button>
+            </div>
+        </div>
+
+        <!-- GAINERS -->
+        <div class="movers-panel active" id="panel-gainers">
+            <div class="movers-row">
+                {% for coin in top_gainers %}
+                <div class="mover-card coin-row gain-card"
+                    data-id="{{ coin.id }}"
+                    data-name="{{ coin.name }}"
+                    data-symbol="{{ coin.symbol }}"
+                    data-image="{{ coin.image }}"
+                    data-price-inr="{{ coin.current_price }}"
+                    data-volume="{{ coin.total_volume }}"
+                    data-change="{{ coin.price_change_percentage_24h }}"
+                    data-marketcap="{{ coin.market_cap }}"
+                    data-rank="{{ loop.index }}"
+                    data-high="{{ coin.high_24h }}"
+                    data-low="{{ coin.low_24h }}"
+                    data-ath="{{ coin.ath }}"
+                    data-supply="{{ coin.circulating_supply }}"
+                    data-sparkline='{{ coin.sparkline_in_7d.price | tojson }}'>
+                    <div class="mover-card-top">
+                        <span class="mover-badge gain-badge">▲ {{ coin.price_change_percentage_24h | round(2) }}%</span>
+                        <button class="mover-star-btn"
+                                data-id="{{ coin.id }}"
+                                data-name="{{ coin.name }}"
+                                data-symbol="{{ coin.symbol }}"
+                                data-image="{{ coin.image }}"
+                                onclick="event.stopPropagation(); toggleCoinStar(this)"
+                                title="Add to watchlist">
+                            <i class="fa-regular fa-star"></i>
+                        </button>
+                    </div>
+                    <div class="mover-identity">
+                        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="mover-logo"
+                             onerror="this.style.display='none'">
+                        <div class="mover-name-wrap">
+                            <span class="mover-name">{{ coin.name }}</span>
+                            <span class="mover-symbol">{{ coin.symbol | upper }}</span>
+                        </div>
+                    </div>
+                    <div class="mover-price price-cell">₹{{ coin.formatted_price }}</div>
+                    <canvas class="mover-sparkline"
+                        data-sparkline='{{ coin.sparkline_in_7d.price | tojson if coin.sparkline_in_7d else "[]" }}'
+                        data-change="{{ coin.price_change_percentage_24h }}"></canvas>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- LOSERS -->
+        <div class="movers-panel" id="panel-losers">
+            <div class="movers-row">
+                {% for coin in top_losers %}
+                <div class="mover-card coin-row lose-card"
+                    data-id="{{ coin.id }}"
+                    data-name="{{ coin.name }}"
+                    data-symbol="{{ coin.symbol }}"
+                    data-image="{{ coin.image }}"
+                    data-price-inr="{{ coin.current_price }}"
+                    data-volume="{{ coin.total_volume }}"
+                    data-change="{{ coin.price_change_percentage_24h }}"
+                    data-marketcap="{{ coin.market_cap }}"
+                    data-rank="{{ loop.index }}"
+                    data-high="{{ coin.high_24h }}"
+                    data-low="{{ coin.low_24h }}"
+                    data-ath="{{ coin.ath }}"
+                    data-supply="{{ coin.circulating_supply }}"
+                    data-sparkline='{{ coin.sparkline_in_7d.price | tojson }}'>
+                    <div class="mover-card-top">
+                        <span class="mover-badge lose-badge">▼ {{ coin.price_change_percentage_24h | round(2) | abs }}%</span>
+                        <button class="mover-star-btn"
+                                data-id="{{ coin.id }}"
+                                data-name="{{ coin.name }}"
+                                data-symbol="{{ coin.symbol }}"
+                                data-image="{{ coin.image }}"
+                                onclick="event.stopPropagation(); toggleCoinStar(this)"
+                                title="Add to watchlist">
+                            <i class="fa-regular fa-star"></i>
+                        </button>
+                    </div>
+                    <div class="mover-identity">
+                        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="mover-logo"
+                             onerror="this.style.display='none'">
+                        <div class="mover-name-wrap">
+                            <span class="mover-name">{{ coin.name }}</span>
+                            <span class="mover-symbol">{{ coin.symbol | upper }}</span>
+                        </div>
+                    </div>
+                    <div class="mover-price price-cell">₹{{ coin.formatted_price }}</div>
+                    <canvas class="mover-sparkline"
+                        data-sparkline='{{ coin.sparkline_in_7d.price | tojson if coin.sparkline_in_7d else "[]" }}'
+                        data-change="{{ coin.price_change_percentage_24h }}"></canvas>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- PICKS -->
+        <div class="movers-panel" id="panel-picks">
+            <div class="movers-row">
+                {% for coin in top_picks %}
+                <div class="mover-card coin-row {% if coin.price_change_percentage_24h >= 0 %}gain-card{% else %}lose-card{% endif %}"
+                    data-id="{{ coin.id }}"
+                    data-name="{{ coin.name }}"
+                    data-symbol="{{ coin.symbol }}"
+                    data-image="{{ coin.image }}"
+                    data-price-inr="{{ coin.current_price }}"
+                    data-volume="{{ coin.total_volume }}"
+                    data-change="{{ coin.price_change_percentage_24h }}"
+                    data-marketcap="{{ coin.market_cap }}"
+                    data-rank="{{ loop.index }}"
+                    data-high="{{ coin.high_24h }}"
+                    data-low="{{ coin.low_24h }}"
+                    data-ath="{{ coin.ath }}"
+                    data-supply="{{ coin.circulating_supply }}"
+                    data-sparkline='{{ coin.sparkline_in_7d.price | tojson }}'>
+                    <div class="mover-card-top">
+                        <span class="mover-badge {% if coin.price_change_percentage_24h >= 0 %}gain-badge{% else %}lose-badge{% endif %}">{{ "▲" if coin.price_change_percentage_24h >= 0 else "▼" }} {{ coin.price_change_percentage_24h | round(2) | abs }}%</span>
+                        <button class="mover-star-btn"
+                                data-id="{{ coin.id }}"
+                                data-name="{{ coin.name }}"
+                                data-symbol="{{ coin.symbol }}"
+                                data-image="{{ coin.image }}"
+                                onclick="event.stopPropagation(); toggleCoinStar(this)"
+                                title="Add to watchlist">
+                            <i class="fa-regular fa-star"></i>
+                        </button>
+                    </div>
+                    <div class="mover-identity">
+                        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="mover-logo"
+                             onerror="this.style.display='none'">
+                        <div class="mover-name-wrap">
+                            <span class="mover-name">{{ coin.name }}</span>
+                            <span class="mover-symbol">{{ coin.symbol | upper }}</span>
+                        </div>
+                    </div>
+                    <div class="mover-price price-cell">₹{{ coin.formatted_price }}</div>
+                    <canvas class="mover-sparkline"
+                        data-sparkline='{{ coin.sparkline_in_7d.price | tojson if coin.sparkline_in_7d else "[]" }}'
+                        data-change="{{ coin.price_change_percentage_24h }}"></canvas>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑤ COIN TABLE — top 25 -->
+    <div class="coin-table-section">
+        <div class="section-head">
+            <span class="section-title">Top Cryptocurrencies</span>
+            <span class="section-badge">Top 25 by Volume</span>
+            <a href="{{ url_for('coins') }}" class="section-link">View all coins →</a>
+        </div>
+        <div class="coin-table-box">
+            <div class="ct-head">
+                <div class="ct-th">#</div>
+                <div class="ct-th">Coin</div>
+                <div class="ct-th r">Price</div>
+                <div class="ct-th r">24h %</div>
+                <div class="ct-th r">Volume</div>
+                <div class="ct-th r">24h High / Low</div>
+            </div>
+
+            {% if top_coins %}
+                {% for coin in top_coins %}
+                <div class="ct-row coin-row"
+                    data-id="{{ coin.id }}"
+                    data-name="{{ coin.name }}"
+                    data-symbol="{{ coin.symbol }}"
+                    data-image="{{ coin.image }}"
+                    data-price-inr="{{ coin.current_price }}"
+                    data-volume="{{ coin.total_volume }}"
+                    data-change="{{ coin.price_change_percentage_24h }}"
+                    data-marketcap="{{ coin.market_cap }}"
+                    data-rank="{{ loop.index }}"
+                    data-high="{{ coin.high_24h }}"
+                    data-low="{{ coin.low_24h }}"
+                    data-ath="{{ coin.ath }}"
+                    data-supply="{{ coin.circulating_supply }}"
+                    data-sparkline='{{ coin.sparkline_in_7d.price | tojson if coin.sparkline_in_7d else "[]" }}'>
+
+                    <div class="ct-rank">{{ loop.index }}</div>
+
+                    <div class="ct-coin">
+                        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="ct-logo"
+                             onerror="this.style.display='none'">
+                        <div>
+                            <div class="ct-name">
+                                {{ coin.name }}
+                                <button class="coin-star-btn"
+                                        data-id="{{ coin.id }}"
+                                        data-name="{{ coin.name }}"
+                                        data-symbol="{{ coin.symbol }}"
+                                        data-image="{{ coin.image }}"
+                                        onclick="event.stopPropagation(); toggleCoinStar(this)"
+                                        title="Add to watchlist">
+                                    <i class="fa-regular fa-star"></i>
+                                </button>
+                            </div>
+                            <span class="ct-sym">{{ coin.symbol | upper }}</span>
+                        </div>
+                    </div>
+
+                    <div class="ct-price price-cell">₹{{ coin.formatted_price }}</div>
+
+                    <div class="ct-chg">
+                        <span class="ct-pill {% if coin.price_change_percentage_24h >= 0 %}up{% else %}dn{% endif %}">
+                            {{ "▲" if coin.price_change_percentage_24h >= 0 else "▼" }}
+                            {{ coin.price_change_percentage_24h | round(2) | abs }}%
+                        </span>
+                    </div>
+
+                    <div class="ct-mcap">{{ coin.formatted_volume }}</div>
+
+                    <div class="ct-spark">
+                        {% if coin.high_24h and coin.low_24h %}
+                        <div class="hl-bar-wrap">
+                            <span class="hl-low">₹{{ coin.low_24h | format_inr }}</span>
+                            <div class="hl-bar">
+                                {% if coin.high_24h != coin.low_24h %}
+                                {% set pct = ((coin.current_price - coin.low_24h) / (coin.high_24h - coin.low_24h) * 100) | round(1) %}
+                                <div class="hl-bar-fill" style="width: {{ [pct, 100] | min }}%"></div>
+                                {% endif %}
+                            </div>
+                            <span class="hl-high">₹{{ coin.high_24h | format_inr }}</span>
+                        </div>
+                        {% else %}—{% endif %}
+                    </div>
+
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="padding:24px;text-align:center;color:#94A3B8;font-size:13px;">
+                    No coin data available.
+                </div>
+            {% endif %}
+
+            <div class="ct-table-footer">
+                Showing top 25 coins · <a href="{{ url_for('coins') }}">View all coins →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑥ NEWS -->
+    <div class="news-section">
+        <div class="section-head">
+            <span class="section-title">Latest Crypto News</span>
+            <a href="{{ url_for('news') }}" class="section-link">View all news →</a>
+        </div>
+        <div class="news-grid">
+            {% if articles %}
+                {% for art in articles[:3] %}
+                {% set bg_colors = ['linear-gradient(135deg,#DBEAFE,#EFF6FF)', 'linear-gradient(135deg,#fde68a,#fef3c7)', 'linear-gradient(135deg,#d1fae5,#f0fdf4)'] %}
+                {% set emojis = ['📈', '🏦', '⚡'] %}
+                <a href="{{ url_for('news_detail', article_id=loop.index0) }}" class="news-card">
+                    {% if art.urlToImage %}
+                    <img src="{{ art.urlToImage }}" alt="" class="news-card-img-real"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <div class="news-card-img" style="background:{{ bg_colors[loop.index0 % 3] }};display:none;">
+                        {{ emojis[loop.index0 % 3] }}
+                    </div>
+                    {% else %}
+                    <div class="news-card-img" style="background:{{ bg_colors[loop.index0 % 3] }};">
+                        {{ emojis[loop.index0 % 3] }}
+                    </div>
+                    {% endif %}
+                    <div class="news-card-body">
+                        {# ── Category chip derived from title keywords ── #}
+                        {% set _t = art.title | lower %}
+                        {% if 'bitcoin' in _t or 'btc' in _t %}
+                            <span class="news-cat-chip">BTC</span>
+                        {% elif 'ethereum' in _t or 'eth' in _t %}
+                            <span class="news-cat-chip">ETH</span>
+                        {% elif 'exchange' in _t or 'binance' in _t or 'coinbase' in _t %}
+                            <span class="news-cat-chip">Exchange</span>
+                        {% elif 'regulation' in _t or 'sec' in _t or 'legal' in _t or 'government' in _t %}
+                            <span class="news-cat-chip">Regulation</span>
+                        {% elif 'defi' in _t or 'nft' in _t or 'web3' in _t %}
+                            <span class="news-cat-chip">DeFi/NFT</span>
+                        {% else %}
+                            <span class="news-cat-chip">Market</span>
+                        {% endif %}
+                        {% if art.source %}
+                        <div class="news-card-source">
+                            <div class="news-source-dot"></div>
+                            {{ art.source.name }}
+                        </div>
+                        {% endif %}
+                        <div class="news-card-title">
+                            {{ art.title[:100] }}{% if art.title|length > 100 %}...{% endif %}
+                        </div>
+                        <div class="news-card-footer">
+                            <span class="news-card-time">
+                                {{ art.publishedAt[:10] if art.publishedAt else '' }}
+                            </span>
+                            <span class="news-card-read">Read →</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div style="grid-column:1/-1;text-align:center;color:#94A3B8;font-size:13px;padding:24px 0;">
+                    No news available.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- COIN MODAL — unchanged -->
+<div id="coinModal" class="coin-modal hidden">
+    <div class="coin-modal-box">
+        <div class="cmodal-header">
+            <div class="cmodal-header-left">
+                <div class="cmodal-logo-ring">
+                    <img id="modalLogo" src="" alt="" width="40" height="40">
+                </div>
+                <div>
+                    <div class="cmodal-name-row">
+                        <span id="modalName" class="cmodal-name"></span>
+                        <span id="modalSymbol" class="cmodal-symbol"></span>
+                    </div>
+                    <span id="modalRank" class="cmodal-rank-badge"></span>
+                </div>
+            </div>
+            <div class="cmodal-header-right">
+                <div>
+                    <div id="modalHeaderPrice" class="cmodal-big-price"></div>
+                    <div id="modalHeaderChange" class="cmodal-change"></div>
+                </div>
+                <button id="closeModal" class="cmodal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        <div class="cmodal-stats-strip">
+            <div class="cms-item"><span class="cms-label">Market Cap</span><span class="cms-value" id="modalMarketCap"></span></div>
+            <div class="cms-div"></div>
+            <div class="cms-item"><span class="cms-label">Volume 24h</span><span class="cms-value" id="modalVolume"></span></div>
+            <div class="cms-div"></div>
+            <div class="cms-item"><span class="cms-label">24h High</span><span class="cms-value" id="modalHigh"></span></div>
+            <div class="cms-div"></div>
+            <div class="cms-item"><span class="cms-label">24h Low</span><span class="cms-value" id="modalLow"></span></div>
+            <div class="cms-div"></div>
+            <div class="cms-item"><span class="cms-label">ATH</span><span class="cms-value" id="modalATH"></span></div>
+            <span id="modalPrice" style="display:none"></span>
+            <span id="modalChange" style="display:none"></span>
+        </div>
+        <div class="cmodal-chart-wrap">
+            <canvas id="modalChart"></canvas>
+        </div>
+        <div class="cmodal-footer">
+            <span class="cmodal-disclaimer">
+                <i class="fa-solid fa-triangle-exclamation"></i> Prices may be delayed. Not financial advice.
+            </span>
+            <a id="modalViewMore" href="#" class="cmodal-view-btn">
+                Full Details <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- MARKET CAP BREAKDOWN MODAL -->
+<div id="marketCapModal" class="market-cap-modal hidden">
+    <div class="market-cap-box">
+        <div class="market-cap-header">
+            <div>
+                <div class="market-cap-title">Market Cap Breakdown</div>
+                <div class="market-cap-subtitle">Top contributors to global crypto market share</div>
+            </div>
+            <button id="closeMarketCapModal" class="market-cap-close" aria-label="Close market cap breakdown">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="market-cap-chart-wrap">
+            <canvas id="marketCapChart"></canvas>
+        </div>
+        <div class="market-cap-legend" id="marketCapLegend"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{# toggleCoinStar() and loadSavedCoinStars() have been moved to main.js #}
+{# main.js reads user-logged-in meta tag so no Jinja needed in JS files #}
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

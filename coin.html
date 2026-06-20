@@ -1,0 +1,200 @@
+{% extends "layouts/base_public.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/coins.css') }}">{% endblock %}
+{% block title %}{{ coin.name }} - Coin Scanner{% endblock %}
+{% block content %}
+
+{% set sym  = "$" if currency == "usd" else "₹" %}
+{% set curr = currency if currency else "inr" %}
+{% set md   = coin.market_data %}
+{% set price    = md.current_price.get(curr, 0) if md else 0 %}
+{% set change24 = md.price_change_percentage_24h if md else 0 %}
+{% set is_up    = change24 and change24 > 0 %}
+
+<div class="coin-detail-page">
+
+  <!-- HERO -->
+  <div class="cd-hero">
+    <div class="cd-hero-left">
+      {% if coin.image is mapping %}
+        <img src="{{ coin.image.get('large', coin.image.get('small','')) }}" alt="{{ coin.name }}" class="cd-logo">
+      {% elif coin.image %}
+        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="cd-logo">
+      {% endif %}
+      <div>
+        <div class="cd-hero-name-row">
+          <h1 class="cd-name">{{ coin.name }}</h1>
+          <span class="cd-symbol-badge">{{ coin.symbol | upper }}</span>
+          {% if coin.market_cap_rank %}<span class="cd-rank-badge">Rank #{{ coin.market_cap_rank }}</span>{% endif %}
+        </div>
+        {% if coin.categories %}
+        <div class="cd-categories">
+          {% for cat in coin.categories[:3] %}<span class="cd-cat-tag">{{ cat }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="cd-hero-right">
+      <div class="cd-price">{{ sym }}{{ "{:,.6f}".format(price) if price < 0.01 else ("{:,.4f}".format(price) if price < 1 else "{:,.2f}".format(price)) }}</div>
+      {% if change24 %}
+      <div class="cd-change-pill {{ 'up' if is_up else 'down' }}">
+        {{ "▲" if is_up else "▼" }} {{ "{:.2f}".format(change24|abs) }}%
+        <span class="cd-change-label">24h</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="cd-layout">
+
+    <!-- LEFT -->
+    <div class="cd-left">
+
+      <!-- Chart -->
+      <div class="cd-chart-card">
+        <div class="cd-chart-header">
+          <span class="cd-chart-title"><i class="fa-solid fa-chart-line"></i> Price Chart</span>
+          <div class="cd-period-btns">
+            <button class="period-btn" data-days="1">1D</button>
+            <button class="period-btn active" data-days="7">7D</button>
+            <button class="period-btn" data-days="30">30D</button>
+            <button class="period-btn" data-days="365">1Y</button>
+          </div>
+        </div>
+        <div class="cd-chart-loading" id="chartLoading" style="display:none">
+          <div class="cd-spinner"></div>
+        </div>
+        <div class="cd-chart-container">
+          <canvas id="coinChart"
+            data-prices='{{ chart_prices | tojson | safe }}'
+            data-currency="{{ currency }}"
+            data-coin-id="{{ coin.id }}"></canvas>
+        </div>
+      </div>
+
+      {% if md %}
+      <!-- Range Bar -->
+      <div class="cd-range-card">
+        <div class="cd-range-header">
+          <span class="cd-range-label">24h Price Range</span>
+          <span class="cd-range-badge">{{ "USD" if curr == "usd" else "INR" }}</span>
+        </div>
+        {% set low  = md.low_24h.get(curr,0) %}
+        {% set high = md.high_24h.get(curr,0) %}
+        {% set pct  = ((price - low) / (high - low) * 100) if (high - low) > 0 else 50 %}
+        <div class="cd-range-row">
+          <span class="cd-range-low">{{ sym }}{{ "{:,.2f}".format(low) }}</span>
+          {% set safepct = pct|int %}
+          {% set safepct = 95 if safepct > 95 else (2 if safepct < 2 else safepct) %}
+          <div class="cd-range-track">
+            <div class="cd-range-dot" style="left:calc({{ safepct }}% - 6px)"></div>
+          </div>
+          <span class="cd-range-high">{{ sym }}{{ "{:,.2f}".format(high) }}</span>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="cd-stats-grid">
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-chart-pie"></i> Market Cap</span>
+          {% set mc = md.market_cap.get(curr,0) %}
+          <strong class="cd-stat-val">{% if mc %}{{ sym }}{{ "{:,.0f}".format(mc) }}{% else %}—{% endif %}</strong>
+        </div>
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-arrow-right-arrow-left"></i> 24h Volume</span>
+          <strong class="cd-stat-val">{{ sym }}{{ "{:,.0f}".format(md.total_volume.get(curr,0)) }}</strong>
+        </div>
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-trophy"></i> All Time High</span>
+          {% set ath_val = md.ath.get(curr,0) %}
+          <strong class="cd-stat-val cd-ath">{% if ath_val %}{{ sym }}{{ "{:,.6f}".format(ath_val) if ath_val < 1 else "{:,.2f}".format(ath_val) }}{% else %}—{% endif %}</strong>
+        </div>
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-arrow-trend-down"></i> All Time Low</span>
+          {% set atl_val = md.atl.get(curr,0) %}
+          <strong class="cd-stat-val">{% if atl_val %}{{ sym }}{{ "{:,.6f}".format(atl_val) if atl_val < 1 else "{:,.2f}".format(atl_val) }}{% else %}—{% endif %}</strong>
+        </div>
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-coins"></i> Circulating Supply</span>
+          <strong class="cd-stat-val">
+            {% if md.circulating_supply %}{{ "{:,.0f}".format(md.circulating_supply) }} {{ coin.symbol|upper }}{% else %}N/A{% endif %}
+          </strong>
+          {% if md.max_supply and md.circulating_supply %}
+          {% set spct = [(md.circulating_supply/md.max_supply*100)|int, 100]|sort|first %}
+          <div class="cd-supply-bar"><div class="cd-supply-fill" style="width:{{ spct }}%"></div></div>
+          <span class="cd-stat-sub">Max: {{ "{:,.0f}".format(md.max_supply) }}</span>
+          {% endif %}
+        </div>
+
+        <div class="cd-stat-card">
+          <span class="cd-stat-label"><i class="fa-solid fa-building-columns"></i> Fully Diluted Val</span>
+          <strong class="cd-stat-val">
+            {% if md.fully_diluted_valuation and md.fully_diluted_valuation.get(curr) %}{{ sym }}{{ "{:,.0f}".format(md.fully_diluted_valuation.get(curr)) }}{% else %}N/A{% endif %}
+          </strong>
+        </div>
+
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="cd-right">
+
+      {% if coin.description and coin.description.get('en') %}
+      <div class="cd-about-card">
+        <h3 class="cd-section-title">About {{ coin.name }}</h3>
+        <div class="cd-about-body" id="aboutShort">{{ coin.description['en'][:500] | safe }}</div>
+        {% if coin.description['en']|length > 500 %}
+        <div class="cd-about-body" id="aboutFull" style="display:none">{{ coin.description['en'][500:1400] | safe }}</div>
+        <button class="cd-read-more" id="readMoreBtn" onclick="toggleAbout()">Read more ↓</button>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if coin.links %}
+      <div class="cd-links-card">
+        <h3 class="cd-section-title">Links</h3>
+        <div class="cd-links-list">
+          {% if coin.links.homepage and coin.links.homepage[0] %}
+          <a href="{{ coin.links.homepage[0] }}" target="_blank" class="cd-link-item"><i class="fa-solid fa-globe"></i> Official Website</a>
+          {% endif %}
+          {% if coin.links.blockchain_site and coin.links.blockchain_site[0] %}
+          <a href="{{ coin.links.blockchain_site[0] }}" target="_blank" class="cd-link-item"><i class="fa-solid fa-cube"></i> Block Explorer</a>
+          {% endif %}
+          {% if coin.links.subreddit_url %}
+          <a href="{{ coin.links.subreddit_url }}" target="_blank" class="cd-link-item"><i class="fa-brands fa-reddit"></i> Reddit</a>
+          {% endif %}
+          {% if coin.links.repos_url and coin.links.repos_url.github and coin.links.repos_url.github[0] %}
+          <a href="{{ coin.links.repos_url.github[0] }}" target="_blank" class="cd-link-item"><i class="fa-brands fa-github"></i> GitHub</a>
+          {% endif %}
+          {% if coin.links.twitter_screen_name %}
+          <a href="https://twitter.com/{{ coin.links.twitter_screen_name }}" target="_blank" class="cd-link-item"><i class="fa-brands fa-x-twitter"></i> Twitter / X</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if coin.developer_data and coin.developer_data.stars %}
+      <div class="cd-dev-card">
+        <h3 class="cd-section-title"><i class="fa-brands fa-github"></i> Developer Activity</h3>
+        <div class="cd-dev-grid">
+          <div class="cd-dev-item"><span class="cd-dev-val">{{ coin.developer_data.stars|default(0) }}</span><span class="cd-dev-label">Stars</span></div>
+          <div class="cd-dev-item"><span class="cd-dev-val">{{ coin.developer_data.forks|default(0) }}</span><span class="cd-dev-label">Forks</span></div>
+          <div class="cd-dev-item"><span class="cd-dev-val">{{ coin.developer_data.pull_requests_merged|default(0) }}</span><span class="cd-dev-label">PRs Merged</span></div>
+          <div class="cd-dev-item"><span class="cd-dev-val">{{ coin.developer_data.commit_count_4_weeks|default(0) }}</span><span class="cd-dev-label">Commits 4w</span></div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/coin.js') }}"></script>{% endblock %}

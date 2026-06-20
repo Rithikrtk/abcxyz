@@ -1,0 +1,78 @@
+{% extends 'layouts/base_public.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+{% endblock %}
+{% block title %}{{ article.title }} | Coin Scanner{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <!-- ── BACK NAV ── -->
+  <div class="detail-nav">
+    <a href="/news" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Intelligence
+    </a>
+  </div>
+
+  <!-- ── ARTICLE HEADER ── -->
+  <div class="detail-header">
+    <div class="detail-tags">
+      <span class="detail-tag">
+        <i class="fa-solid fa-newspaper"></i>
+        {% if article.source %}{{ article.source.name }}{% else %}News{% endif %}
+      </span>
+      {% if article.publishedAt %}
+      <span class="detail-tag">
+        <i class="fa-regular fa-clock"></i>
+        {{ article.publishedAt[:10] }}
+      </span>
+      {% endif %}
+    </div>
+
+    <h1 class="detail-title">{{ article.title }}</h1>
+
+    {% if article.description %}
+    <p class="detail-lead">{{ article.description }}</p>
+    {% endif %}
+  </div>
+
+  <!-- ── HERO IMAGE ── -->
+  {% if article.urlToImage %}
+  <div class="detail-image-wrap">
+    <img src="{{ article.urlToImage }}" alt="{{ article.title }}" class="detail-image"
+         onerror="this.parentElement.style.display='none'">
+  </div>
+  {% endif %}
+
+  <!-- ── ARTICLE BODY ── -->
+  <div class="detail-body">
+    {% if article.content %}
+    <div class="detail-content">
+      {{ article.content.replace('[+', '').split('chars]')[0] | safe }}
+    </div>
+    {% endif %}
+
+    <!-- ── READ FULL CTA ── -->
+    <div class="detail-cta-wrap">
+      <div class="detail-cta-card">
+        <div class="cta-icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+        <div class="cta-text">
+          <strong>Continue Reading</strong>
+          <span>This is a preview. Read the full article on {{ article.source.name if article.source else 'the source' }}.</span>
+        </div>
+        <a href="{{ article.url }}" target="_blank" rel="noopener" class="cta-btn">
+          Read Full Article <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BACK TO NEWS ── -->
+  <div class="detail-bottom-nav">
+    <a href="/news" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to all stories
+    </a>
+  </div>
+
+</div>
+{% endblock %}

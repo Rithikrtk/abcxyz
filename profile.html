@@ -1,0 +1,196 @@
+{% extends "layouts/base_public.html" %}
+{% block title %}My Profile — CoinScanner{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.name[0] | upper }}</div>
+        <div class="profile-header-info">
+            <h1 class="profile-header-name">{{ user.name }}</h1>
+            <p class="profile-header-email">{{ user.email }}</p>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;">
+                <span class="profile-verified-badge">
+                    <i class="fa-solid fa-circle-check"></i> Verified
+                </span>
+                <span class="profile-join-date">
+                    Member since {{ user.created_at[:7] if user.created_at else "—" }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS + PANELS -->
+    <div class="profile-tabs-wrap">
+
+        <div class="profile-tabs-bar">
+            <button class="profile-tab active" data-tab="overview">
+                <i class="fa-regular fa-user"></i> Profile
+            </button>
+            <button class="profile-tab" data-tab="watchlist">
+                <i class="fa-regular fa-bookmark"></i> Watchlist
+                <span class="profile-tab-badge">{{ (coin_watchlist | length) + (exchange_watchlist | length) }}</span>
+            </button>
+        </div>
+
+        <!-- ── TAB: PROFILE ───────────────────────────── -->
+        <div class="profile-panel active" id="tab-overview">
+
+            <!-- Basic Info -->
+            <div class="profile-card">
+                <div class="profile-card-head">
+                    <span class="profile-card-title">
+                        <i class="fa-regular fa-id-card"></i> Basic Info
+                    </span>
+                </div>
+                <div class="profile-info-grid">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Full Name</div>
+                        <div class="profile-info-value">{{ user.name }}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Email Address</div>
+                        <div class="profile-info-value">{{ user.email }}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Account Status</div>
+                        <div class="profile-info-value green">Verified</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Member Since</div>
+                        <div class="profile-info-value">{{ user.created_at[:10] if user.created_at else "—" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password & Security -->
+            <div class="profile-card">
+                <div class="profile-card-head">
+                    <span class="profile-card-title">
+                        <i class="fa-solid fa-shield-halved"></i> Password & Security
+                    </span>
+                </div>
+                <div class="profile-pw-row">
+                    <div class="profile-pw-left">
+                        <div class="profile-pw-title">Login Password</div>
+                        <div class="profile-pw-sub">Keep your account secure with a strong password</div>
+                    </div>
+                    <a href="{{ url_for('change_password') }}" class="profile-pw-btn">
+                        Change Password <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── TAB: WATCHLIST ─────────────────────────── -->
+        <div class="profile-panel" id="tab-watchlist">
+
+            <!-- Saved Coins -->
+            <div class="profile-card">
+                <div class="profile-card-head">
+                    <span class="profile-card-title">
+                        <i class="fa-solid fa-coins"></i> Saved Coins
+                    </span>
+                    <span class="profile-card-count">{{ coin_watchlist | length }}</span>
+                </div>
+
+                {% if coin_watchlist %}
+                <div class="wl-table-head">
+                    <span>Coin</span>
+                    <span class="wl-th-r">Price</span>
+                    <span class="wl-th-r">24H %</span>
+                    <span></span>
+                </div>
+                {% for item in coin_watchlist %}
+                <div class="wl-row" id="coin-row-{{ item.coin_id }}">
+                    <div class="wl-coin">
+                        <img src="{{ item.coin_image }}" alt="{{ item.coin_name }}"
+                             class="wl-logo" onerror="this.style.display='none'">
+                        <div>
+                            <div class="wl-name">{{ item.coin_name }}</div>
+                            <div class="wl-sym">{{ item.coin_symbol | upper }}</div>
+                        </div>
+                    </div>
+                    <div class="wl-price" id="wl-price-{{ item.coin_id }}">—</div>
+                    <div class="wl-chg"  id="wl-chg-{{ item.coin_id }}">—</div>
+                    <button class="wl-remove" title="Remove from watchlist"
+                            onclick="removeWatchlistCoin('{{ item.coin_id }}')">
+                        <i class="fa-solid fa-bookmark"></i>
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="wl-empty">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <p>No coins saved yet</p>
+                    <a href="{{ url_for('coins') }}">Browse coins →</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Saved Exchanges -->
+            <div class="profile-card">
+                <div class="profile-card-head">
+                    <span class="profile-card-title">
+                        <i class="fa-solid fa-building-columns"></i> Saved Exchanges
+                    </span>
+                    <span class="profile-card-count">{{ exchange_watchlist | length }}</span>
+                </div>
+
+                {% if exchange_watchlist %}
+                <div class="wl-exchange-grid">
+                    {% for item in exchange_watchlist %}
+                    <div class="wl-exchange-card" id="ex-card-{{ item.exchange_id }}">
+                        <img src="{{ item.exchange_logo }}" alt="{{ item.exchange_name }}"
+                             class="wl-exchange-logo" onerror="this.style.display='none'">
+                        <span class="wl-exchange-name">{{ item.exchange_name }}</span>
+                        <button class="wl-exchange-remove" title="Remove"
+                                onclick="removeWatchlistExchange('{{ item.exchange_id }}')">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="wl-empty">
+                    <i class="fa-regular fa-building-columns"></i>
+                    <p>No exchanges saved yet</p>
+                    <a href="{{ url_for('compare') }}">Browse exchanges →</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ── APPEARANCE CARD ── -->
+            <div class="profile-card appearance-card" id="appearanceCard">
+                <div class="profile-card-head">
+                    <span class="profile-card-title">
+                        <i class="fa-solid fa-palette" style="color:#3975EA;margin-right:6px;"></i>
+                        Appearance
+                    </span>
+                </div>
+                <div class="appearance-row">
+                    <div>
+                        <div class="appearance-label">Dark Mode</div>
+                        <div class="appearance-sub">Easier on the eyes at night</div>
+                    </div>
+                    <label class="toggle-switch" title="Toggle dark mode">
+                        <input type="checkbox" id="darkModeToggle" autocomplete="off">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# All profile JS moved to profile.js: tabs, live prices, remove watchlist items #}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

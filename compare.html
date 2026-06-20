@@ -1,0 +1,488 @@
+{% extends "layouts/base_public.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compare.css') }}">
+{% endblock %}
+{% block title %}Compare Exchanges - Coin Scanner | Agreed Financial Tech Pvt...{% endblock %}
+
+{% block content %}
+<script id="exchangeData" type="application/json">{{ exchanges | tojson | safe }}</script>
+<meta name="user-logged-in" content="{{ 'true' if session.get('user_id') else 'false' }}">
+
+<div class="cmp-page">
+
+  <!-- PAGE HEADER -->
+  <div class="cmp-page-header">
+    <div>
+      <h1 class="cmp-page-title">Compare Exchanges</h1>
+      <p class="cmp-page-sub">Browse all exchanges · Select 2–4 to compare side by side</p>
+    </div>
+    <div class="cmp-header-right">
+      <!-- VIEW TOGGLE — Table (default) / Cards -->
+      <div class="cmp-view-toggle">
+        <button class="cmp-view-btn-toggle active" id="viewListBtn" data-view="list"
+          title="List view">
+          <i class="fa-solid fa-table-list"></i><span>List</span>
+        </button>
+        <button class="cmp-view-btn-toggle" id="viewCardBtn" data-view="card"
+          title="Card view">
+          <i class="fa-solid fa-grip"></i><span>Cards</span>
+        </button>
+      </div>
+      <button class="cmp-compare-now-btn hidden" id="compareNowBtn">
+        <i class="fa-solid fa-table-columns"></i> Compare Now
+        <span class="cmp-sel-count" id="selCount">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="cmp-toolbar">
+    <div class="cmp-toolbar-top">
+      <div class="cmp-search-wrap">
+        <i class="fa-solid fa-magnifying-glass cmp-search-icon"></i>
+        <input type="text" id="cmpSearch" placeholder="Search..." class="cmp-search-input">
+      </div>
+      <div class="cmp-add-wrap">
+        <i class="fa-solid fa-plus cmp-add-icon"></i>
+        <select id="cmpAddSelect" class="cmp-add-select">
+          <option value="">Add to compare...</option>
+          {% for ex in exchanges %}
+          <option value="{{ ex.id }}">{{ ex.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="cmp-toolbar-filters">
+      <span class="cmp-filter-label"><i class="fa-solid fa-sliders"></i> Filter</span>
+      <div class="cmp-filter-divider"></div>
+      <div class="cmp-filter-chips" id="filterChips">
+        <button class="cmp-chip cmp-filter-chip" data-filter="spot"
+          data-tooltip="🟢 Spot Trading — Buy and sell crypto instantly at today's price.">
+          Spot
+        </button>
+        <button class="cmp-chip cmp-filter-chip" data-filter="fno"
+          data-tooltip="⚡ Futures & Options — Make bets on whether crypto will go up or down. High risk.">
+          F&amp;O
+        </button>
+        <button class="cmp-chip cmp-filter-chip" data-filter="p2p"
+          data-tooltip="🤝 Peer-to-Peer — Buy crypto directly from another person via UPI or bank transfer.">
+          P2P
+        </button>
+        <button class="cmp-chip cmp-filter-chip" data-filter="inr"
+          data-tooltip="🇮🇳 INR Support — Deposit and withdraw Indian Rupees directly via UPI or bank transfer.">
+          INR Support
+        </button>
+        <button class="cmp-chip cmp-filter-chip" data-filter="investment"
+          data-tooltip="💰 Investment Products — Earn passive income by staking, lending or SIP-style plans.">
+          Investment
+        </button>
+      </div>
+      <span class="cmp-filter-count hidden" id="filterCount"></span>
+      <button class="cmp-filter-clear hidden" id="filterClear">Clear filters</button>
+    </div>
+  </div>
+
+  <!-- BROWSE MODE -->
+  <div id="browseMode">
+
+    <!-- ══════════════════════════════════════
+         LIST VIEW (default)
+    ══════════════════════════════════════ -->
+    <div id="cmpListView">
+      <table class="cmp-list-table">
+        <thead>
+          <tr>
+            <th class="clt-th-name">Exchange</th>
+            <th class="clt-th-tags">Type</th>
+            <th class="clt-th-fee">Spot Fee</th>
+            <th class="clt-th-lev">Leverage</th>
+            <th class="clt-th-liq">USP 1</th>
+            <th class="clt-th-action"></th>
+          </tr>
+        </thead>
+        <tbody id="cmpListBody">
+          {% for ex in exchanges %}
+          <tr class="cmp-list-row" id="lrow-{{ ex.id }}" data-id="{{ ex.id }}"
+            data-name="{{ ex.name | lower }}"
+            data-spot="{{ 'true' if ex.features.spot else 'false' }}"
+            data-fno="{{ 'true' if ex.features.derivatives_fno else 'false' }}"
+            data-p2p="{{ 'true' if ex.features.p2p else 'false' }}"
+            data-inr="{{ 'true' if ex.features.inr_support else 'false' }}"
+            data-investment="{{ 'true' if ex.features.investment else 'false' }}">
+
+            <!-- Exchange name + logo + select btn -->
+            <td class="clt-td-name">
+              <div class="clt-identity">
+                <!-- + Add to compare button — sits beside the logo -->
+                <button class="clt-sel-btn" data-id="{{ ex.id }}"
+                  title="Add to compare">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+                <div class="clt-logo-wrap">
+                  <img src="{{ ex.logo }}" alt="{{ ex.name }}" class="clt-logo"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                  <div class="clt-logo-fb" style="display:none">{{ ex.name[0] }}</div>
+                </div>
+                <div class="clt-name-wrap"
+                  data-fee="{{ ex.fees.spot }}"
+                  data-usp1="{{ ex.usp1 }}">
+                  <span class="clt-name">{{ ex.name }}</span>
+                  <span class="clt-founded">Est. {{ ex.about.founded }}</span>
+                  <!-- Mobile-only inline info: fee · usp1 -->
+                  <span class="clt-mobile-meta">
+                    <span class="clt-mm-fee">{{ ex.fees.spot }}</span>
+                    <span class="clt-mm-sep">·</span>
+                    <span class="clt-mm-liq">{{ ex.usp1 }}</span>
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Tags -->
+            <td class="clt-td-tags">
+              {% if ex.features.inr_support %}<span class="cmp-tag inr">INR</span>{% endif %}
+              {% if ex.features.spot %}<span class="cmp-tag spot">Spot</span>{% endif %}
+              {% if ex.features.derivatives_fno %}<span class="cmp-tag fno">F&O</span>{% endif %}
+              {% if ex.features.p2p %}<span class="cmp-tag p2p">P2P</span>{% endif %}
+            </td>
+
+            <!-- Spot fee -->
+            <td class="clt-td-fee">{{ ex.fees.spot }}</td>
+
+            <!-- Leverage -->
+            <td class="clt-td-lev">{{ ex.leverage }}</td>
+
+            <!-- USP 1 -->
+            <td class="clt-td-liq">
+              <span class="usp-badge">{{ ex.usp1 }}</span>
+            </td>
+
+            <!-- Actions — Star + View Details -->
+            <td class="clt-td-action">
+              <button class="ex-star-btn"
+                      data-id="{{ ex.id }}"
+                      data-name="{{ ex.name }}"
+                      data-logo="{{ ex.logo }}"
+                      onclick="event.stopPropagation(); toggleExStar(this)"
+                      title="Add to watchlist">
+                <i class="fa-regular fa-star"></i>
+              </button>
+              <button class="clt-detail-btn" data-id="{{ ex.id }}"
+                title="View details">
+                <span class="clt-btn-text">View</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         CARD VIEW
+    ══════════════════════════════════════ -->
+    <div id="cmpCardView" style="display:none">
+      <div class="cmp-grid" id="cmpGrid">
+        {% for ex in exchanges %}
+        <div class="cmp-card" id="card-{{ ex.id }}" data-id="{{ ex.id }}"
+          data-name="{{ ex.name | lower }}"
+          data-spot="{{ 'true' if ex.features.spot else 'false' }}"
+          data-fno="{{ 'true' if ex.features.derivatives_fno else 'false' }}"
+          data-p2p="{{ 'true' if ex.features.p2p else 'false' }}"
+          data-inr="{{ 'true' if ex.features.inr_support else 'false' }}"
+          data-investment="{{ 'true' if ex.features.investment else 'false' }}">
+
+          <div class="cmp-card-header">
+            <div class="cmp-logo-wrap">
+              <img src="{{ ex.logo }}" alt="{{ ex.name }}" class="cmp-logo"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="cmp-logo-fb" style="display:none">{{ ex.name[0] }}</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div class="cmp-card-name">{{ ex.name }}</div>
+              <div class="cmp-card-tags">
+                {% if ex.features.inr_support %}<span class="cmp-tag inr">INR</span>{% endif %}
+                {% if ex.features.spot %}<span class="cmp-tag spot">Spot</span>{% endif %}
+                {% if ex.features.derivatives_fno %}<span class="cmp-tag fno">F&O</span>{% endif %}
+                {% if ex.features.p2p %}<span class="cmp-tag p2p">P2P</span>{% endif %}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <button class="ex-star-btn ex-star-card"
+                      data-id="{{ ex.id }}"
+                      data-name="{{ ex.name }}"
+                      data-logo="{{ ex.logo }}"
+                      onclick="event.stopPropagation(); toggleExStar(this)"
+                      title="Add to watchlist">
+                <i class="fa-regular fa-star"></i>
+              </button>
+              <button class="cmp-sel-btn" data-id="{{ ex.id }}" title="Add to compare">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="cmp-stat-grid">
+            <div class="cmp-stat-box">
+              <span class="cmp-stat-lbl">Spot Fee</span>
+              <span class="cmp-stat-val">{{ ex.fees.spot }}</span>
+            </div>
+            <div class="cmp-stat-box">
+              <span class="cmp-stat-lbl">Leverage</span>
+              <span class="cmp-stat-val">{{ ex.leverage }}</span>
+            </div>
+            <div class="cmp-stat-box">
+              <span class="cmp-stat-lbl">Coins</span>
+              <span class="cmp-stat-val">{{ ex.currencies }}</span>
+            </div>
+            <div class="cmp-stat-box">
+              <span class="cmp-stat-lbl">USP 1</span>
+              <span class="cmp-stat-val usp-text">{{ ex.usp1 }}</span>
+            </div>
+            <div class="cmp-stat-box">
+              <span class="cmp-stat-lbl">USP 2</span>
+              <span class="cmp-stat-val usp-text">{{ ex.usp2 }}</span>
+            </div>
+          </div>
+
+          <div class="cmp-card-meta">
+            <span><i class="fa-solid fa-calendar-days"></i> Est. {{ ex.about.founded }}</span>
+          </div>
+
+          <button class="cmp-view-btn" data-id="{{ ex.id }}">
+            View Details <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="cmp-empty hidden" id="cmpEmpty">
+      <i class="fa-solid fa-filter-circle-xmark"></i>
+      <p>No exchanges match your filters.</p>
+      <button id="cmpResetBtn">Reset filters</button>
+    </div>
+
+  </div>
+
+  <!-- COMPARE TABLE MODE -->
+  <div id="compareMode" style="display:none">
+    <div class="cmp-table-topbar">
+      <div>
+        <div class="cmp-table-title">Side-by-Side Comparison</div>
+        <div class="cmp-table-hint">
+          <i class="fa-solid fa-circle-info"></i> Green highlight = best value in that row
+        </div>
+      </div>
+      <button class="cmp-back-btn" id="backToBrowse">
+        <i class="fa-solid fa-arrow-left"></i> Back to Browse
+      </button>
+    </div>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead id="cmpThead"></thead>
+        <tbody id="cmpTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- FLOATING BAR -->
+<div class="cmp-bar hidden" id="cmpBar">
+  <div class="cmp-bar-left">
+    <span class="cmp-bar-label">Comparing</span>
+    <div class="cmp-bar-chips" id="cmpBarChips"></div>
+  </div>
+  <div class="cmp-bar-right">
+    <button class="cmp-bar-clear" id="cmpBarClear">Clear all</button>
+    <button class="cmp-bar-go" id="cmpBarGo">
+      <i class="fa-solid fa-table-columns"></i> Compare Now
+    </button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="cmpModal" class="cmp-modal hidden">
+  <div class="cmp-modal-box">
+
+    <!-- HEADER: Logo + Name + Tags + Open Account + Close -->
+    <div class="cmp-modal-hdr">
+      <div class="cmp-modal-hdr-left">
+        <div class="cmp-modal-logo-ring">
+          <img id="mdLogo" src="" alt="" width="48" height="48"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div id="mdLogoFb" class="cmp-modal-logo-fb" style="display:none"></div>
+        </div>
+        <div>
+          <span id="mdName" class="cmp-modal-name"></span>
+          <div id="mdTags" class="cmp-modal-tags"></div>
+        </div>
+      </div>
+      <div class="cmp-modal-hdr-right">
+        <div class="cmp-open-acc-wrap">
+          <a id="mdWebsite" href="#" target="_blank" class="cmp-open-acc-btn">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Account
+          </a>
+          <div class="cmp-affiliate-tip">
+            <strong><i class="fa-solid fa-triangle-exclamation"></i> Affiliate Disclosure</strong>
+            This link may be an affiliate link. CoinScanner may earn a commission if you sign up or trade via this platform. This does not affect our ratings or comparisons.
+          </div>
+        </div>
+        <button class="cmp-modal-close" id="cmpModalClose">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="cmp-modal-stats-strip">
+      <div class="cmp-mss-item">
+        <span class="cmp-mss-label">Spot Fee</span>
+        <span class="cmp-mss-val" id="mdSpotFee"></span>
+      </div>
+      <div class="cmp-mss-div"></div>
+      <div class="cmp-mss-item">
+        <span class="cmp-mss-label">Futures Fee</span>
+        <span class="cmp-mss-val" id="mdFutFee"></span>
+      </div>
+      <div class="cmp-mss-div"></div>
+      <div class="cmp-mss-item">
+        <span class="cmp-mss-label">Max Leverage</span>
+        <span class="cmp-mss-val" id="mdLeverage"></span>
+      </div>
+      <div class="cmp-mss-div"></div>
+      <div class="cmp-mss-item">
+        <span class="cmp-mss-label">Coins</span>
+        <span class="cmp-mss-val" id="mdCoins"></span>
+      </div>
+    </div>
+
+    <!-- USP BANNER -->
+    <div class="cmp-usp-banner">
+      <div class="cmp-usp-item">
+        <i class="fa-solid fa-star"></i>
+        <span id="mdUsp1"></span>
+      </div>
+      <div class="cmp-usp-sep">·</div>
+      <div class="cmp-usp-item">
+        <i class="fa-solid fa-star"></i>
+        <span id="mdUsp2"></span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="cmp-modal-tabs">
+      <button class="cmp-modal-tab active" data-tab="assets">
+        <i class="fa-solid fa-coins"></i> Assets &amp; Earning
+      </button>
+      <button class="cmp-modal-tab" data-tab="trading">
+        <i class="fa-solid fa-chart-line"></i> Trading
+      </button>
+      <button class="cmp-modal-tab" data-tab="deposit">
+        <i class="fa-solid fa-building-columns"></i> Deposit &amp; Withdrawal
+      </button>
+      <button class="cmp-modal-tab" data-tab="about">
+        <i class="fa-solid fa-circle-info"></i> About
+      </button>
+    </div>
+
+    <!-- TAB: Assets -->
+    <div class="cmp-modal-body" id="tab-assets">
+      <div class="cmp-info-grid">
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-coins"></i> Supported Assets</div>
+          <div class="cmp-info-row"><span>Total Coins</span><strong id="mdCoins2"></strong></div>
+          <div class="cmp-info-row"><span>INR Support</span><strong id="mdInrSupport"></strong></div>
+          <div class="cmp-info-row"><span>USP 1</span><strong id="mdUsp1Detail"></strong></div>
+          <div class="cmp-info-row"><span>USP 2</span><strong id="mdUsp2Detail"></strong></div>
+        </div>
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-seedling"></i> Earning Options</div>
+          <div class="cmp-info-row"><span>Earning</span><strong id="mdEarning"></strong></div>
+          <div class="cmp-info-row"><span>Mining</span><strong id="mdMining"></strong></div>
+          <div class="cmp-info-row"><span>Investment</span><strong id="mdInvestment"></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Trading -->
+    <div class="cmp-modal-body hidden" id="tab-trading">
+      <div class="cmp-info-grid">
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-percent"></i> Fees</div>
+          <div class="cmp-info-row"><span>Spot Fee</span><strong id="mdSpotFee2"></strong></div>
+          <div class="cmp-info-row"><span>Futures Fee</span><strong id="mdFutFee2"></strong></div>
+        </div>
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-chart-line"></i> Capabilities</div>
+          <div class="cmp-info-row"><span>Max Leverage</span><strong id="mdLeverage2"></strong></div>
+          <div class="cmp-info-row"><span>Spot Trading</span><strong id="mdSpot"></strong></div>
+          <div class="cmp-info-row"><span>Futures / F&amp;O</span><strong id="mdFno"></strong></div>
+          <div class="cmp-info-row"><span>P2P Trading</span><strong id="mdP2p"></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Deposit & Withdrawal -->
+    <div class="cmp-modal-body hidden" id="tab-deposit">
+      <div class="cmp-info-grid">
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-building-columns"></i> Deposit</div>
+          <div class="cmp-info-row"><span>Min Deposit</span><strong id="mdDepLimit"></strong></div>
+          <div class="cmp-info-row"><span>Deposit Fee</span><strong id="mdDepCharge"></strong></div>
+        </div>
+        <div class="cmp-info-block">
+          <div class="cmp-info-title"><i class="fa-solid fa-arrow-up-from-bracket"></i> Withdrawal</div>
+          <div class="cmp-info-row"><span>Min Withdrawal</span><strong id="mdWdLimit"></strong></div>
+          <div class="cmp-info-row"><span>Withdrawal Fee</span><strong id="mdWdCharge"></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: About -->
+    <div class="cmp-modal-body hidden" id="tab-about">
+      <div class="cmp-about-top">
+        <img id="mdAboutLogo" src="" alt="" class="cmp-about-logo"
+          onerror="this.style.display='none'">
+        <div>
+          <div class="cmp-about-name" id="mdAboutName"></div>
+          <p class="cmp-about-desc" id="mdAboutDesc"></p>
+        </div>
+      </div>
+      <div class="cmp-about-meta">
+        <div class="cmp-about-meta-item">
+          <span class="cmp-about-lbl">Founded</span>
+          <span class="cmp-about-val" id="mdFounded"></span>
+        </div>
+        <div class="cmp-about-meta-item">
+          <span class="cmp-about-lbl">Headquarters</span>
+          <span class="cmp-about-val" id="mdHQ"></span>
+        </div>
+        <div class="cmp-about-meta-item">
+          <span class="cmp-about-lbl">Founders</span>
+          <span class="cmp-about-val" id="mdFounders"></span>
+        </div>
+        <div class="cmp-about-meta-item">
+          <span class="cmp-about-lbl">Regulated</span>
+          <span class="cmp-about-val" id="mdRegulated"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="cmp-modal-disclaimer">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Fees, features and limits may change. Always verify on the official exchange website before investing or trading.
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+{% endblock %}

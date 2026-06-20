@@ -1,0 +1,199 @@
+{% extends 'layouts/base_public.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+{% endblock %}
+{% block title %}Crypto Intelligence | Coin Scanner{% endblock %}
+
+{% block content %}
+<div class="news-page">
+
+  <!-- ── HERO HEADER ── -->
+  <div class="news-hero">
+    <div class="news-hero-tag">📡 Live Intelligence Feed</div>
+    <h1 class="news-hero-title">Crypto Intelligence</h1>
+    <p class="news-hero-sub">Breaking news, market insights & exchange updates — curated in real time.</p>
+
+    <div class="news-search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon-inner"></i>
+      <input type="text" id="newsSearch" placeholder="Search stories, topics, keywords…" autocomplete="off">
+      <span class="search-kbd">⌘K</span>
+    </div>
+
+    <div class="news-stats-row">
+      <span><i class="fa-solid fa-circle-dot pulse-dot"></i> Live Updates</span>
+      <span class="divider-dot">·</span>
+      <span id="articleCount">{{ articles|length }} Stories</span>
+      <span class="divider-dot">·</span>
+      <span>Powered by newsdata.io</span>
+    </div>
+  </div>
+
+  {% if articles and articles|length > 0 %}
+
+  <!-- ── FEATURED ARTICLE ── -->
+  <div class="featured-card news-modal-trigger"
+    data-title="{{ articles[0].title | e }}"
+    data-desc="{{ (articles[0].description or '') | e }}"
+    data-content="{{ (articles[0].content or '') | e }}"
+    data-author="{{ (articles[0].author or '') | e }}"
+    data-source="{{ (articles[0].source_id or '') | e }}"
+    data-date="{{ (articles[0].pubDate or '') | e }}"
+    data-url="{{ (articles[0].link or '') | e }}"
+    data-image="{{ (articles[0].image_url or '') | e }}">
+    <div class="featured-left">
+      <div class="featured-badge">
+        <span class="badge-dot"></span> Featured Story
+      </div>
+      <h2 class="featured-title">{{ articles[0].title }}</h2>
+      {% if articles[0].description %}
+      <p class="featured-desc">{{ articles[0].description[:180] }}{% if articles[0].description|length > 180 %}…{% endif %}</p>
+      {% endif %}
+      <div class="featured-meta">
+        {% if articles[0].source_id %}
+        <span class="meta-source">
+          <i class="fa-solid fa-newspaper"></i> {{ articles[0].source_id }}
+        </span>
+        {% endif %}
+        {% if articles[0].pubDate %}
+        <span class="meta-time">
+          <i class="fa-regular fa-clock"></i>
+          {{ articles[0].pubDate[:10] }}
+        </span>
+        {% endif %}
+        <a class="meta-read" href="{{ articles[0].link or '#' }}" target="_blank" rel="noopener noreferrer">Read story <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+    {% if articles[0].image_url %}
+    <div class="featured-right">
+      <img src="{{ articles[0].image_url }}" alt="{{ articles[0].title }}" onerror="this.parentElement.style.display='none'">
+    </div>
+    {% else %}
+    <div class="featured-right featured-placeholder">
+      <i class="fa-solid fa-newspaper"></i>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── SECTION LABEL ── -->
+  <div class="section-divider">
+    <span>Latest Stories</span>
+  </div>
+
+  <!-- ── NEWS GRID ── -->
+  <div class="news-grid-premium" id="newsGrid">
+    {% for art in articles[1:] %}
+    <div class="news-card-premium news-modal-trigger"
+       style="animation-delay: {{ loop.index0 * 0.05 }}s"
+       data-title="{{ art.title | e }}"
+       data-desc="{{ (art.description or '') | e }}"
+       data-content="{{ (art.content or '') | e }}"
+       data-author="{{ (art.author or '') | e }}"
+       data-source="{{ (art.source_id or '') | e }}"
+       data-date="{{ (art.pubDate or '') | e }}"
+       data-url="{{ (art.link or '') | e }}"
+       data-image="{{ (art.image_url or '') | e }}">
+
+      {% if art.image_url %}
+      <div class="card-image">
+        <img src="{{ art.image_url }}" alt="{{ art.title }}" onerror="this.parentElement.classList.add('no-img')">
+      </div>
+      {% else %}
+      <div class="card-image no-img">
+        <i class="fa-solid fa-newspaper"></i>
+      </div>
+      {% endif %}
+
+      <div class="card-body">
+        {% if art.source_id %}
+        <div class="card-source">
+          <span class="source-dot"></span>{{ art.source_id }}
+        </div>
+        {% endif %}
+        <h3 class="card-title">{{ art.title }}</h3>
+        {% if art.description %}
+        <p class="card-desc">{{ art.description[:100] }}{% if art.description|length > 100 %}…{% endif %}</p>
+        {% endif %}
+          <div class="card-footer">
+          {% if art.pubDate %}
+          <span class="card-date">{{ art.pubDate[:10] }}</span>
+          {% endif %}
+          <a class="card-cta" href="{{ art.link or '#' }}" target="_blank" rel="noopener noreferrer">Read <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── EMPTY SEARCH STATE ── -->
+  <div class="news-empty" id="newsEmpty" style="display:none;">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <p>No stories match your search.</p>
+    <span>Try different keywords</span>
+  </div>
+
+  {% else %}
+  <div class="news-empty">
+    <i class="fa-solid fa-satellite-dish"></i>
+    <p>No articles available right now.</p>
+    <span>Check back soon for the latest crypto news</span>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ── NEWS MODAL ── -->
+<div id="newsModal" class="news-modal hidden">
+  <div class="news-modal-box">
+
+    <!-- Image banner -->
+    <div class="nmodal-image-wrap" id="nmodalImageWrap">
+      <img id="nmodalImage" src="" alt="">
+      <div class="nmodal-image-overlay"></div>
+      <button id="nmodalClose" class="nmodal-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- No image fallback header -->
+    <div class="nmodal-no-image-header hidden" id="nmodalNoImageHeader">
+      <button id="nmodalClose2" class="nmodal-close nmodal-close-dark"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="nmodal-body">
+      <div class="nmodal-meta-row">
+        <span class="nmodal-source" id="nmodalSource"></span>
+        <span class="nmodal-date" id="nmodalDate"></span>
+      </div>
+      <h2 class="nmodal-title" id="nmodalTitle"></h2>
+      <div class="nmodal-author-row" id="nmodalAuthorRow">
+        <i class="fa-solid fa-circle-user"></i>
+        <span id="nmodalAuthor"></span>
+      </div>
+      <div class="nmodal-divider"></div>
+      <p class="nmodal-desc" id="nmodalDesc"></p>
+      <div class="nmodal-content-block" id="nmodalContentBlock">
+        <div class="nmodal-content-label"><i class="fa-solid fa-quote-left"></i> From the article</div>
+        <p class="nmodal-content-text" id="nmodalContent"></p>
+        <div class="nmodal-content-fade"></div>
+      </div>
+      <div class="nmodal-read-more-hint" id="nmodalReadHint">
+        <i class="fa-solid fa-lock"></i> Full article available on the publisher's website
+      </div>
+    </div>
+
+    <div class="nmodal-footer">
+      <span class="nmodal-disclaimer">
+        <i class="fa-solid fa-triangle-exclamation"></i> Content from external source
+      </span>
+      <a id="nmodalReadBtn" href="#" target="_blank" rel="noopener noreferrer" class="nmodal-read-btn">
+        Read Full Article <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{# News search + modal logic moved to news.js (updated for newsdata.io fields) #}
+<script src="{{ url_for('static', filename='js/news.js') }}"></script>
+{% endblock %}

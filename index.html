@@ -1,0 +1,10 @@
+{% extends 'layouts/base_public.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<meta http-equiv="refresh" content="0; url={{ url_for('home') }}">
+<div style="padding:24px;text-align:center;color:#94A3B8;font-size:14px;">
+    Redirecting to <a href="{{ url_for('home') }}">Home</a>...
+</div>
+{% endblock %}

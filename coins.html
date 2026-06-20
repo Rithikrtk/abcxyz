@@ -1,0 +1,375 @@
+{% extends "layouts/base_public.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/coins.css') }}">{% endblock %}
+{% block title %}Coins - Coin Scanner{% endblock %}
+{% block content %}
+
+<div class="coins-page">
+
+  <!-- HEADER -->
+  <div class="coins-header">
+    <div class="coins-header-left">
+      <h1 class="coins-title">Market Overview</h1>
+      <p class="coins-subtitle">Live crypto prices · Updated every minute</p>
+    </div>
+    <div class="coins-view-toggle">
+      <a href="{{ url_for('coins', view='table') }}" class="view-btn {% if active_view == 'table' %}active{% endif %}">
+        <i class="fa-solid fa-table-list"></i><span>Table</span>
+      </a>
+      <a href="{{ url_for('coins', view='card') }}" class="view-btn {% if active_view == 'card' %}active{% endif %}">
+        <i class="fa-solid fa-grip"></i><span>Cards</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- MOVERS STRIP -->
+  <div class="movers-section">
+    <div class="movers-tabs" id="moversTabs">
+      <button class="mover-tab active" data-tab="gainers">
+        <i class="fa-solid fa-arrow-trend-up"></i> Top Gainers
+      </button>
+      <button class="mover-tab" data-tab="losers">
+        <i class="fa-solid fa-arrow-trend-down"></i> Top Losers
+      </button>
+      <button class="mover-tab" data-tab="picks">
+        <i class="fa-solid fa-star"></i> Top Opportunities
+      </button>
+      <button class="movers-collapse" id="moversCollapse">
+        <i class="fa-solid fa-chevron-up"></i>
+      </button>
+    </div>
+
+    <div class="movers-body" id="moversBody">
+
+      {% if active_view == 'table' %}
+      {# ── TABLE VIEW: movers as compact table rows ── #}
+
+        {% for tab_id, tab_coins, tab_badge in [('gainers', gainers, 'up'), ('losers', losers, 'down'), ('picks', picks, None)] %}
+        <div class="movers-list {% if loop.first %}active{% endif %}" id="tab-{{ tab_id }}">
+          <table class="movers-table">
+            <tbody>
+              {% for coin in tab_coins %}{% set chg = coin.price_change_percentage_24h %}
+              <tr class="mover-row coin-card"
+                data-id="{{ coin.id }}" data-name="{{ coin.name }}" data-symbol="{{ coin.symbol }}"
+                data-image="{{ coin.image }}" data-price-inr="{{ coin.current_price }}"
+                data-volume="{{ coin.total_volume }}" data-change="{{ chg }}"
+                data-marketcap="{{ coin.market_cap }}" data-rank="{{ coin.market_cap_rank }}"
+                data-high="{{ coin.high_24h }}" data-low="{{ coin.low_24h }}"
+                data-ath="{{ coin.ath }}" data-supply="{{ coin.circulating_supply }}">
+                <td class="mover-td-rank">#{{ coin.market_cap_rank or '—' }}</td>
+                <td class="mover-td-coin">
+                  <div class="mover-identity">
+                    <div class="mover-logo-wrap">
+                      <img src="{{ coin.image }}" alt="{{ coin.name }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div class="mover-logo-fb">{{ coin.symbol[0] }}</div>
+                    </div>
+                    <div>
+                      <span class="mover-coin-name">{{ coin.name }}</span>
+                      <span class="mover-coin-sym">{{ coin.symbol }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="mover-td-badge">
+                  {% if tab_badge == 'up' %}
+                    <span class="mover-badge up">▲ {{ "%.2f"|format(chg) }}%</span>
+                  {% elif tab_badge == 'down' %}
+                    <span class="mover-badge down">▼ {{ "%.2f"|format(chg|abs) }}%</span>
+                  {% else %}
+                    <span class="mover-badge {{ 'up' if chg >= 0 else 'down' }}">{{ '▲' if chg >= 0 else '▼' }} {{ "%.2f"|format(chg|abs) }}%</span>
+                  {% endif %}
+                </td>
+                <td class="mover-td-price mover-price">₹{{ coin.formatted_price }}</td>
+                <td class="mover-td-meta">Vol: {{ coin.formatted_volume }}</td>
+                <td class="mover-td-meta">MCap: {{ coin.formatted_mcap }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endfor %}
+
+      {% else %}
+      {# ── CARD VIEW: movers as scrollable cards ── #}
+
+        {% for tab_id, tab_coins, tab_badge in [('gainers', gainers, 'up'), ('losers', losers, 'down'), ('picks', picks, None)] %}
+        <div class="movers-list movers-list-cards {% if loop.first %}active{% endif %}" id="tab-{{ tab_id }}">
+          {% for coin in tab_coins %}{% set chg = coin.price_change_percentage_24h %}
+          <div class="mover-card coin-card"
+            data-id="{{ coin.id }}" data-name="{{ coin.name }}" data-symbol="{{ coin.symbol }}"
+            data-image="{{ coin.image }}" data-price-inr="{{ coin.current_price }}"
+            data-volume="{{ coin.total_volume }}" data-change="{{ chg }}"
+            data-marketcap="{{ coin.market_cap }}" data-rank="{{ coin.market_cap_rank }}"
+            data-high="{{ coin.high_24h }}" data-low="{{ coin.low_24h }}"
+            data-ath="{{ coin.ath }}" data-supply="{{ coin.circulating_supply }}">
+            <div class="mover-card-top">
+              <div class="mover-logo-wrap">
+                <img src="{{ coin.image }}" alt="{{ coin.name }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="mover-logo-fb">{{ coin.symbol[0] }}</div>
+              </div>
+              <div class="mover-name-wrap">
+                <span class="mover-coin-name">{{ coin.name }}</span>
+                <span class="mover-coin-sym">{{ coin.symbol }}</span>
+              </div>
+              {% if tab_badge == 'up' %}
+                <span class="mover-badge up">▲ {{ "%.2f"|format(chg) }}%</span>
+              {% elif tab_badge == 'down' %}
+                <span class="mover-badge down">▼ {{ "%.2f"|format(chg|abs) }}%</span>
+              {% else %}
+                <span class="mover-badge {{ 'up' if chg >= 0 else 'down' }}">{{ '▲' if chg >= 0 else '▼' }} {{ "%.2f"|format(chg|abs) }}%</span>
+              {% endif %}
+            </div>
+            <div class="mover-price">₹{{ coin.formatted_price }}</div>
+            <div class="mover-stats-row">
+              <div class="mover-stat"><span class="mover-stat-lbl">Volume</span><span class="mover-stat-val">{{ coin.formatted_volume }}</span></div>
+              <div class="mover-stat"><span class="mover-stat-lbl">MCap</span><span class="mover-stat-val">{{ coin.formatted_mcap }}</span></div>
+              <div class="mover-stat"><span class="mover-stat-lbl">Rank</span><span class="mover-stat-val">#{{ coin.market_cap_rank or '—' }}</span></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- COIN LIBRARY HEADING -->
+  <div class="coin-library-heading">
+    <h2 class="coin-library-title">Coin Library</h2>
+  </div>
+
+  <!-- SEARCH — plain div, no form, JS only -->
+  <div class="coins-toolbar">
+    <div class="search-wrapper">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="coinSearch" placeholder="Search by name or symbol..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="coins-count-row">Showing <strong id="coinCount">{{ coins|length }}</strong> coins</div>
+
+  <!-- TABLE VIEW -->
+  {% if active_view == 'table' %}
+  <div class="coins-table-wrap">
+    <table class="coins-table">
+      <thead>
+        <tr>
+          <th class="th-rank">#</th>
+          <th>Coin</th>
+          <th class="th-right">Price (INR)</th>
+          <th class="th-right">24h Change</th>
+          <th class="th-right th-hide-mobile">Volume</th>
+          <th class="th-right th-hide-mobile">24h High / Low</th>
+          <th class="th-right">Chart</th>
+          <th class="th-right">Details</th>
+        </tr>
+      </thead>
+      <tbody id="coinsTableBody">
+        {% for coin in coins %}{% set chg = coin.price_change_percentage_24h %}
+        <tr class="coin-row"
+          data-id="{{ coin.id }}" data-name="{{ coin.name }}" data-symbol="{{ coin.symbol }}"
+          data-image="{{ coin.image }}" data-price-inr="{{ coin.current_price }}"
+          data-volume="{{ coin.total_volume }}" data-change="{{ chg }}"
+          data-marketcap="{{ coin.market_cap }}" data-rank="{{ loop.index }}"
+          data-high="{{ coin.high_24h }}" data-low="{{ coin.low_24h }}"
+          data-ath="{{ coin.ath }}" data-supply="{{ coin.circulating_supply }}">
+          <td class="td-rank">{{ loop.index }}</td>
+          <td class="td-name">
+            <div class="coin-tbl-identity">
+              <div class="coin-tbl-img-wrap">
+                <img src="{{ coin.image }}" alt="{{ coin.name }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="coin-tbl-fb">{{ coin.symbol[0] }}</div>
+              </div>
+              <div class="coin-tbl-text">
+                <span class="coin-tbl-name">
+                  {{ coin.name }}
+                  <button class="coin-star-btn"
+                          data-id="{{ coin.id }}"
+                          data-name="{{ coin.name }}"
+                          data-symbol="{{ coin.symbol }}"
+                          data-image="{{ coin.image }}"
+                          onclick="event.stopPropagation(); toggleCoinStar(this)"
+                          title="Add to watchlist">
+                    <i class="fa-regular fa-star"></i>
+                  </button>
+                </span>
+                <span class="coin-tbl-sym">{{ coin.symbol }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="td-right td-price">₹{{ coin.formatted_price }}</td>
+          <td class="td-right">
+            <span class="chg-pill {{ 'up' if chg >= 0 else 'down' }}">{{ '▲' if chg >= 0 else '▼' }} {{ "%.2f"|format(chg|abs) }}%</span>
+          </td>
+          <td class="td-right th-hide-mobile td-muted">{{ coin.formatted_volume }}</td>
+          <td class="td-right th-hide-mobile">
+            <div class="hl-bar-wrap">
+              <span class="hl-low">₹{{ coin.low_24h | format_inr if coin.low_24h else '—' }}</span>
+              <div class="hl-bar">
+                {% if coin.high_24h and coin.low_24h and coin.high_24h != coin.low_24h %}
+                  {% set pct = ((coin.current_price - coin.low_24h) / (coin.high_24h - coin.low_24h) * 100) | round(1) %}
+                  <div class="hl-bar-fill" style="width: {{ [pct, 100] | min }}%"></div>
+                {% endif %}
+              </div>
+              <span class="hl-high">₹{{ coin.high_24h | format_inr if coin.high_24h else '—' }}</span>
+            </div>
+          </td>
+          <td class="td-right td-spark">
+            <svg class="tbl-sparkline" id="spark-{{ coin.symbol }}"
+                 data-symbol="{{ coin.symbol }}"
+                 width="80" height="32" viewBox="0 0 80 32"></svg>
+          </td>
+          <td class="td-right">
+            <a href="{{ url_for('coin_page', coin_id=coin.id) }}" class="tbl-detail-btn" onclick="event.stopPropagation()">
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="tbl-empty">No coins found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- CARD VIEW -->
+  {% if active_view == 'card' %}
+  <div class="coins-grid" id="coinsGrid">
+    {% for coin in coins %}{% set chg = coin.price_change_percentage_24h %}
+    <div class="coin-card"
+      data-id="{{ coin.id }}" data-name="{{ coin.name }}" data-symbol="{{ coin.symbol }}"
+      data-image="{{ coin.image }}" data-price-inr="{{ coin.current_price }}"
+      data-volume="{{ coin.total_volume }}" data-change="{{ chg }}"
+      data-marketcap="{{ coin.market_cap }}" data-rank="{{ coin.market_cap_rank }}"
+      data-high="{{ coin.high_24h }}" data-low="{{ coin.low_24h }}"
+      data-ath="{{ coin.ath }}" data-supply="{{ coin.circulating_supply }}"
+      data-sparkline='{{ coin.sparkline_in_7d.price | tojson if coin.sparkline_in_7d else "[]" }}'>
+
+      <div class="card-top-row">
+        <span class="card-rank"># {{ coin.market_cap_rank }}</span>
+        <span class="coin-change {% if chg >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "▲" if chg >= 0 else "▼" }} {{ "%.2f"|format(chg|abs) }}%
+        </span>
+      </div>
+
+      <div class="card-identity">
+        <img src="{{ coin.image }}" alt="{{ coin.name }}" class="card-coin-logo"
+             onerror="this.style.display='none'">
+        <div>
+          <div class="card-coin-name">
+            {{ coin.name }}
+            <button class="coin-star-btn"
+                    data-id="{{ coin.id }}"
+                    data-name="{{ coin.name }}"
+                    data-symbol="{{ coin.symbol }}"
+                    data-image="{{ coin.image }}"
+                    onclick="event.stopPropagation(); toggleCoinStar(this)"
+                    title="Add to watchlist">
+              <i class="fa-regular fa-star"></i>
+            </button>
+          </div>
+          <span class="card-coin-symbol">{{ coin.symbol | upper }}</span>
+        </div>
+      </div>
+
+      <div class="coin-price price-cell" data-price-inr="{{ coin.current_price }}">
+        ₹{{ coin.formatted_price }}
+      </div>
+
+      <div class="card-stats-grid">
+        <div class="card-stat-box">
+          <div class="card-stat-label">Market Cap</div>
+          <div class="card-stat-val">{{ coin.formatted_mcap or "—" }}</div>
+        </div>
+        <div class="card-stat-box">
+          <div class="card-stat-label">Volume 24h</div>
+          <div class="card-stat-val">{{ coin.formatted_volume }}</div>
+        </div>
+      </div>
+
+      <div class="card-footer-row">
+        <svg class="card-sparkline" id="card-spark-{{ coin.id }}"
+             viewBox="0 0 80 24" preserveAspectRatio="none"></svg>
+        <a href="{{ url_for('coin_page', coin_id=coin.id) }}"
+           class="card-view-link" onclick="event.stopPropagation()">
+          View <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i>
+        </a>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% if coins|length == 0 %}<div class="coins-empty"><p>No coins found.</p></div>{% endif %}
+  {% endif %}
+
+</div>
+
+<!-- INFINITE SCROLL SENTINEL -->
+{# coins.js watches this div — when it enters viewport, next page loads #}
+<div class="coins-load-sentinel" id="coinsSentinel">
+    <div class="coins-load-spinner" id="coinsSpinner"></div>
+</div>
+<div class="coins-all-loaded" id="coinsAllLoaded">
+    <i class="fa-solid fa-check-circle" style="color:#22c55e;margin-right:6px;"></i>
+    All {{ coins|length }} coins loaded
+</div>
+
+<!-- MODAL -->
+<div id="coinModal" class="coin-modal hidden">
+  <div class="coin-modal-box">
+    <div class="cmodal-header">
+      <div class="cmodal-header-left">
+        <div class="cmodal-logo-ring">
+          <img id="modalLogo" src="" alt="" width="40" height="40">
+        </div>
+        <div>
+          <div class="cmodal-name-row">
+            <span id="modalName" class="cmodal-name"></span>
+            <span id="modalSymbol" class="cmodal-symbol"></span>
+          </div>
+          <span id="modalRank" class="cmodal-rank-badge"></span>
+        </div>
+      </div>
+      <div class="cmodal-header-right">
+        <div>
+          <div id="modalHeaderPrice" class="cmodal-big-price"></div>
+          <div id="modalHeaderChange" class="cmodal-change"></div>
+        </div>
+        <button id="closeModal" class="cmodal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="cmodal-stats-strip">
+      <div class="cms-item"><span class="cms-label">Market Cap</span><span class="cms-value" id="modalMarketCap"></span></div>
+      <div class="cms-div"></div>
+      <div class="cms-item"><span class="cms-label">Volume 24h</span><span class="cms-value" id="modalVolume"></span></div>
+      <div class="cms-div"></div>
+      <div class="cms-item"><span class="cms-label">24h High</span><span class="cms-value" id="modalHigh"></span></div>
+      <div class="cms-div"></div>
+      <div class="cms-item"><span class="cms-label">24h Low</span><span class="cms-value" id="modalLow"></span></div>
+      <div class="cms-div"></div>
+      <div class="cms-item"><span class="cms-label">ATH</span><span class="cms-value" id="modalATH"></span></div>
+      <span id="modalPrice" style="display:none"></span>
+      <span id="modalChange" style="display:none"></span>
+    </div>
+    <div class="cmodal-chart-wrap">
+      <canvas id="modalChart"></canvas>
+    </div>
+    <div class="cmodal-footer">
+      <span class="cmodal-disclaimer">
+        <i class="fa-solid fa-triangle-exclamation"></i> Prices may be delayed. Not financial advice.
+      </span>
+      <a id="modalViewMore" href="#" class="cmodal-view-btn">
+        Full Details <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+{# Card sparklines → moved to coin.js (section 3) #}
+{# toggleCoinStar() + loadSavedCoinStars() → moved to main.js #}
+<script src="{{ url_for('static', filename='js/coin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/coins.js') }}"></script>
+{% endblock %}

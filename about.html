@@ -1,0 +1,353 @@
+{% extends 'layouts/base_public.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block title %}Coin Scanner — Your Gateway to Smarter Crypto Investing & Trading{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════ -->
+<section class="lp-hero">
+  <div class="lp-hero-bg">
+    <div class="lp-hero-orb lp-orb1"></div>
+    <div class="lp-hero-orb lp-orb2"></div>
+    <div class="lp-grid-pattern"></div>
+  </div>
+  <div class="lp-container">
+    <div class="lp-hero-inner">
+      <div class="lp-hero-badge">
+        <span class="lp-badge-dot"></span> Now in Beta — Join the Waitlist
+      </div>
+      <h1 class="lp-hero-title">
+        Your Gateway to<br>
+        <span class="lp-hero-accent">Smarter Crypto</span><br>
+        Invest & Trade
+      </h1>
+      <p class="lp-hero-sub">
+        Compare crypto exchanges, find the best fees, and start investing with ease - all in one place. Built for the world's next generation of investors.
+      </p>
+      <div class="lp-hero-ctas">
+        <a href="{{ url_for('signup') }}" class="lp-btn-primary">
+          Join the Waitlist <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <a href="{{ url_for('compare') }}" class="lp-btn-ghost">
+          Compare Exchanges
+        </a>
+      </div>
+      <div class="lp-hero-stats">
+        <div class="lp-stat">
+          <span class="lp-stat-num">Start small</span>
+          <span class="lp-stat-label">Invest at your pace</span>
+        </div>
+        <div class="lp-stat-div"></div>
+        <div class="lp-stat">
+          <span class="lp-stat-num">Free</span>
+          <span class="lp-stat-label">Always free to use</span>
+        </div>
+        <div class="lp-stat-div"></div>
+        <div class="lp-stat">
+          <span class="lp-stat-num">0%</span>
+          <span class="lp-stat-label">No hidden fees</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     WHAT IS COIN SCANNER
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-about-section">
+  <div class="lp-container">
+    <div class="lp-section-tag">About Us</div>
+    <h2 class="lp-section-title">What is Coin Scanner?</h2>
+    <p class="lp-section-lead">
+      Coin Scanner (C.S) is a next-generation crypto exchange scanner built to make investing and trading <strong>simple, smart, and accessible.</strong> Whether you're just starting out or working with a small budget, C.S is here to guide you.
+    </p>
+    <div class="lp-feature-grid">
+      <div class="lp-feature-card" style="--delay:0s">
+        <div class="lp-feature-icon" style="background:#eff6ff;color:#2563eb">
+          <i class="fa-solid fa-magnifying-glass-dollar"></i>
+        </div>
+        <h3>Find the right exchange</h3>
+        <p>Start your journey with exchanges that match your budget</p>
+      </div>
+      <div class="lp-feature-card" style="--delay:0.08s">
+        <div class="lp-feature-icon" style="background:#f0fdf4;color:#16a34a">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <h3>Compare in one place</h3>
+        <p>Fees, features, security and offerings across multiple platforms — side by side.</p>
+      </div>
+      <div class="lp-feature-card" style="--delay:0.16s">
+        <div class="lp-feature-icon" style="background:#fffbeb;color:#d97706">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h3>Learn crypto the easy way</h3>
+        <p>Beginner-friendly explanations and guides — like someone explaining it to a 5-year-old.</p>
+      </div>
+      <div class="lp-feature-card" style="--delay:0.24s">
+        <div class="lp-feature-icon" style="background:#fdf4ff;color:#9333ea">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3>Unbiased recommendations</h3>
+        <p>Balanced, no hidden agenda. Just data-driven insights you can trust.</p>
+      </div>
+      <div class="lp-feature-card" style="--delay:0.4s">
+        <div class="lp-feature-icon" style="background:#ecfdf5;color:#059669">
+          <i class="fa-solid fa-filter"></i>
+        </div>
+        <h3>Deposit mode filter</h3>
+        <p>Filter by INR, USD, or P2P — choose the most convenient funding method for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     VISION & MISSION
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-vm-section">
+  <div class="lp-container">
+    <div class="lp-vm-grid">
+      <div class="lp-vm-card lp-vision">
+        <div class="lp-vm-icon"><i class="fa-solid fa-eye"></i></div>
+        <h3>Our Vision</h3>
+        <p>To become the world's most trusted crypto exchange scanner that makes investing <strong>transparent, safe, and rewarding</strong> for everyone.</p>
+      </div>
+      <div class="lp-vm-card lp-mission">
+        <div class="lp-vm-icon"><i class="fa-solid fa-bullseye"></i></div>
+        <h3>Our Mission</h3>
+        <p>To provide a real-time, unbiased crypto exchange comparison platform that helps users trade with <strong>clarity, confidence, and lower costs.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     PROBLEM & SOLUTION
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-ps-section">
+  <div class="lp-container">
+    <div class="lp-section-tag">Why We Exist</div>
+    <h2 class="lp-section-title">The Problem We Solve</h2>
+    <div class="lp-ps-grid">
+      <!-- Problems -->
+      <div class="lp-ps-col">
+        <div class="lp-ps-header problem-header">
+          <i class="fa-solid fa-triangle-exclamation"></i> The Problems
+        </div>
+        <div class="lp-problem-list">
+          <div class="lp-problem-item">
+            <div class="lp-problem-icon"><i class="fa-solid fa-book-open"></i></div>
+            <div>
+              <strong>Lack of financial literacy</strong>
+              <p>Beginners struggle with overwhelming crypto information and jargon.</p>
+            </div>
+          </div>
+          <div class="lp-problem-item">
+            <div class="lp-problem-icon"><i class="fa-solid fa-eye-slash"></i></div>
+            <div>
+              <strong>Confusing comparisons</strong>
+              <p>Hidden fees and complex structures make choosing an exchange difficult.</p>
+            </div>
+          </div>
+          <div class="lp-problem-item">
+            <div class="lp-problem-icon"><i class="fa-solid fa-lock"></i></div>
+            <div>
+              <strong>Limited accessibility</strong>
+              <p>Most platforms cater to big traders, leaving small investors behind.</p>
+            </div>
+          </div>
+          <div class="lp-problem-item">
+            <div class="lp-problem-icon"><i class="fa-solid fa-circle-question"></i></div>
+            <div>
+              <strong>Unclear deposit options</strong>
+              <p>Users don't know which exchanges accept INR vs USD vs P2P — leading to extra fees.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Solutions -->
+      <div class="lp-ps-col">
+        <div class="lp-ps-header solution-header">
+          <i class="fa-solid fa-circle-check"></i> The C.S Solution
+        </div>
+        <div class="lp-solution-list">
+          <div class="lp-solution-item">
+            <div class="lp-solution-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div>
+              <strong>Budget-based discovery</strong>
+              <p>start small and discover options that fit your budget</p>
+            </div>
+          </div>
+          <div class="lp-solution-item">
+            <div class="lp-solution-icon"><i class="fa-solid fa-table-list"></i></div>
+            <div>
+              <strong>Comprehensive comparison</strong>
+              <p>Fees, security, compliance and more — all in one transparent view.</p>
+            </div>
+          </div>
+          <div class="lp-solution-item">
+            <div class="lp-solution-icon"><i class="fa-solid fa-lightbulb"></i></div>
+            <div>
+              <strong>Educational layer</strong>
+              <p>We break down crypto in plain, everyday language. No jargon, ever.</p>
+            </div>
+          </div>
+          <div class="lp-solution-item">
+            <div class="lp-solution-icon"><i class="fa-solid fa-sliders"></i></div>
+            <div>
+              <strong>Deposit mode filter</strong>
+              <p>Instantly filter exchanges by INR, USD or P2P — choose what's right for you.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     WHY CHOOSE US
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-why-section">
+  <div class="lp-container">
+    <div class="lp-section-tag">Why Coin Scanner</div>
+    <h2 class="lp-section-title">Built Different, By Design</h2>
+    <p class="lp-section-lead">Unlike INDmoney or other platforms, Coin Scanner is <strong>budget-first, fair, and beginner-focused</strong> — built to empower investors worldwide, not overwhelm them.</p>
+    <div class="lp-compare-table">
+      <div class="lp-compare-header">
+        <div></div>
+        <div class="lp-compare-col lp-compare-others">Others</div>
+        <div class="lp-compare-col lp-compare-cs">Coin Scanner</div>
+      </div>
+      <div class="lp-compare-row">
+        <span>Minimum investment</span>
+        <span class="lp-compare-bad"><i class="fa-solid fa-xmark"></i> High minimums</span>
+        <span class="lp-compare-good"><i class="fa-solid fa-check"></i> Start with small amounts</span>
+      </div>
+      <div class="lp-compare-row">
+        <span>Fee transparency</span>
+        <span class="lp-compare-bad"><i class="fa-solid fa-xmark"></i> Hidden charges</span>
+        <span class="lp-compare-good"><i class="fa-solid fa-check"></i> Fully transparent</span>
+      </div>
+      <div class="lp-compare-row">
+        <span>Beginner friendly</span>
+        <span class="lp-compare-bad"><i class="fa-solid fa-xmark"></i> Complex UI</span>
+        <span class="lp-compare-good"><i class="fa-solid fa-check"></i> Plain language</span>
+      </div>
+      <div class="lp-compare-row">
+        <span>Deposit filter (INR/USD/P2P)</span>
+        <span class="lp-compare-bad"><i class="fa-solid fa-xmark"></i> Not available</span>
+        <span class="lp-compare-good"><i class="fa-solid fa-check"></i> Built-in filter</span>
+      </div>
+      <div class="lp-compare-row">
+        <span>Hidden promotions</span>
+        <span class="lp-compare-bad"><i class="fa-solid fa-xmark"></i> Paid rankings</span>
+        <span class="lp-compare-good"><i class="fa-solid fa-check"></i> Zero agenda</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     TEAM
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-team-section">
+  <div class="lp-container">
+    <div class="lp-section-tag">The People</div>
+    <h2 class="lp-section-title">Meet the Visionaries</h2>
+    <p class="lp-section-lead">A team of passionate builders, traders, and operators on a mission to make crypto fair for everyone.</p>
+    <div class="lp-team-grid">
+      <div class="lp-team-card">
+        <div class="lp-team-avatar" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">
+          <span>DP</span>
+        </div>
+        <h3>Dwaraka Prasad</h3>
+        <div class="lp-team-role">Founder & Financial Head</div>
+        <p>Stock broker with 5+ years of experience in financial markets. Drives the vision and financial strategy of Coin Scanner.</p>
+        <div class="lp-team-tags">
+          <span>Founder</span><span>Finance</span><span>Strategy</span>
+        </div>
+      </div>
+      <div class="lp-team-card">
+        <div class="lp-team-avatar" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+          <span>RM</span>
+        </div>
+        <h3>Rithik M</h3>
+        <div class="lp-team-role">CTO</div>
+        <p>Leads technical architecture, product build, and platform security. The engine behind everything you see and use on C.S.</p>
+        <div class="lp-team-tags">
+          <span>CTO</span><span>Architecture</span><span>Security</span>
+        </div>
+      </div>
+      <div class="lp-team-card">
+        <div class="lp-team-avatar" style="background:linear-gradient(135deg,#059669,#047857)">
+          <span>DG</span>
+        </div>
+        <h3>Durga Prasad</h3>
+        <div class="lp-team-role">Business Development & Ops</div>
+        <p>Builds strategic relationships and manages outreach. The bridge between Coin Scanner and the broader ecosystem.</p>
+        <div class="lp-team-tags">
+          <span>BizDev</span><span>Operations</span><span>Partnerships</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     CONTACT
+════════════════════════════════════════════════════════ -->
+<section class="lp-section lp-contact-section" id="contact">
+  <div class="lp-container">
+    <div class="lp-contact-grid">
+      <div class="lp-contact-left">
+        <div class="lp-section-tag">Get in Touch</div>
+        <h2 class="lp-section-title" style="text-align:left;margin-bottom:16px">Start Your Crypto Journey with Confidence</h2>
+        <p style="color:#4b5563;line-height:1.7;margin-bottom:32px;">
+          Coin Scanner makes crypto investing and trading simple, safe, and rewarding. Whether you're starting with ₹100 or scaling up, we're here to guide you every step of the way.
+        </p>
+        <a href="{{ url_for('signup') }}" class="lp-btn-primary">
+          Join the Waitlist Today <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+      <div class="lp-contact-right">
+        <div class="lp-contact-card">
+          <h3>Contact Us</h3>
+          <div class="lp-contact-items">
+            <a href="mailto:coinscanner.tech@gmail.com" class="lp-contact-item">
+              <div class="lp-contact-icon" style="background:#f0fdf4;color:#16a34a">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div>
+                <span class="lp-contact-label">Email</span>
+                <span class="lp-contact-value">coinscanner.tech@gmail.com</span>
+              </div>
+            </a>
+            <a href="tel:+918073782119" class="lp-contact-item">
+              <div class="lp-contact-icon" style="background:#eff6ff;color:#2563eb">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div>
+                <span class="lp-contact-label">Phone</span>
+                <span class="lp-contact-value">+91 8073782119</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+{# toggleFaq() moved to main.js — available globally on all pages #}
+{% endblock %}
