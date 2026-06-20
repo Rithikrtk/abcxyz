@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Environment
+.env
+*.env
+
+# Database files — never commit production DB
+*.db
+*.sqlite3
+
+# Python artifacts
+*.pyc
+__pycache__/
+instance/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Test / coverage
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.coverage
+.coverage.*
+
+# AWS / deployment
+.elasticbeanstalk/
+*.deploy*
+
+# Node modules
+node_modules/
+
+# Backup files
+*~
+*.tmp
+*.bak
